@@ -2,7 +2,7 @@ import FloatChatDashboard from '@/components/FloatChatDashboard';
 
 const Index = () => {
   console.log('Index component rendering...');
-  
+
   try {
     return <FloatChatDashboard />;
   } catch (error) {

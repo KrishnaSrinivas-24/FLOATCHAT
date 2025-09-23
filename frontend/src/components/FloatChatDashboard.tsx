@@ -10,7 +10,7 @@ import { floatChatAPI } from '@/services/api';
 
 const FloatChatDashboard = () => {
   console.log('FloatChatDashboard rendering...');
-  
+
   const [activeTab, setActiveTab] = useState('map');
   const [dataFilters, setDataFilters] = useState({});
   const [highlightedFloats, setHighlightedFloats] = useState<string[]>([]);
