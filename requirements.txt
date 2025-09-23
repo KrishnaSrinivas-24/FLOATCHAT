@@ -11,6 +11,12 @@ langchain-community
 langchain-google-genai
 sentence-transformers
 
+#Backend API Libraries
+fastapi
+uvicorn[standard]
+websockets
+python-multipart
+python-dotenv
+
 #Frontend Squad Libraries
-streamlit
 plotly
