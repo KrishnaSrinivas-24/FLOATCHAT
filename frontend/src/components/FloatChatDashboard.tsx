@@ -131,8 +131,8 @@ const FloatChatDashboard = () => {
 
               <div className="flex-1 overflow-hidden">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full">
-                  <TabsContent value="map" className="h-full mt-0 p-0">
-                    <div className="h-full w-full overflow-hidden">
+                  <TabsContent value="map" className="h-full mt-0 p-4">
+                    <div className="h-full w-full overflow-hidden rounded-lg">
                       <RealTimeOceanMap
                         filters={dataFilters}
                         highlightedFloats={highlightedFloats}
@@ -140,8 +140,8 @@ const FloatChatDashboard = () => {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="data" className="h-full mt-0 p-0">
-                    <div className="h-full w-full overflow-hidden">
+                  <TabsContent value="data" className="h-full mt-0 p-4">
+                    <div className="h-full w-full overflow-hidden rounded-lg">
                       <StreamingDataVisualization
                         filters={dataFilters}
                         highlightedFloats={highlightedFloats}

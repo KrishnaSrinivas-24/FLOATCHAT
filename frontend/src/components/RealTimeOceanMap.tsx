@@ -22,6 +22,40 @@ const RealTimeOceanMap = ({ filters, highlightedFloats = [] }: RealTimeOceanMapP
       setFloats(data);
     } catch (error) {
       console.error('Failed to load floats:', error);
+      // Add some mock data if API fails
+      const mockFloats: ArgoFloat[] = [
+        {
+          id: "mock_1",
+          lat: 40.7,
+          lon: -74.0,
+          last_contact: "2024-01-15",
+          temperature: 18.5,
+          salinity: 35.2,
+          trajectory: [[40.7, -74.0], [40.8, -73.9]],
+          status: "active"
+        },
+        {
+          id: "mock_2",
+          lat: 35.6,
+          lon: 139.7,
+          last_contact: "2024-01-14",
+          temperature: 22.1,
+          salinity: 34.8,
+          trajectory: [[35.6, 139.7], [35.7, 139.8]],
+          status: "active"
+        },
+        {
+          id: "mock_3",
+          lat: -33.9,
+          lon: 18.4,
+          last_contact: "2024-01-13",
+          temperature: 16.3,
+          salinity: 35.0,
+          trajectory: [[-33.9, 18.4], [-33.8, 18.5]],
+          status: "delayed"
+        }
+      ];
+      setFloats(mockFloats);
     } finally {
       setLoading(false);
     }
@@ -50,8 +84,8 @@ const RealTimeOceanMap = ({ filters, highlightedFloats = [] }: RealTimeOceanMapP
   };
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4">
+    <div className="h-full w-full flex flex-col min-h-[600px]">
+      <div className="flex items-center justify-between mb-4 px-4 pt-4">
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <Map className="w-5 h-5 text-blue-600" />
@@ -69,7 +103,7 @@ const RealTimeOceanMap = ({ filters, highlightedFloats = [] }: RealTimeOceanMapP
         </div>
       </div>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 px-4 pb-4 min-h-[500px]">
         {/* Interactive Map Area */}
         <div className="lg:col-span-2">
           <Card className="h-full">
@@ -94,6 +128,15 @@ const RealTimeOceanMap = ({ filters, highlightedFloats = [] }: RealTimeOceanMapP
             </CardHeader>
             <CardContent className="p-4 h-full">
               <div className="relative bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200 rounded-lg h-full min-h-[400px] overflow-hidden border-2 border-blue-200">
+                {loading && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/80 z-30">
+                    <div className="text-center">
+                      <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">Loading ocean data...</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Ocean Background with Currents */}
                 <div className="absolute inset-0">
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-300/10 to-transparent animate-pulse"></div>

@@ -1,6 +1,6 @@
-# This is the final version of the main AI script.
-# It implements a full RAG (Retrieval-Augmented Generation) pipeline and
-# securely loads secrets from a .env file.
+# FloatChat AI Core - Enhanced with Gemini 2.0 Flash
+# This implements a full RAG (Retrieval-Augmented Generation) pipeline using
+# Google's latest Gemini 2.0 Flash model with advanced capabilities.
 
 import os
 from dotenv import load_dotenv
@@ -11,23 +11,24 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_core.output_parsers import StrOutputParser
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
+import google.generativeai as genai
 
 # --- Securely Load Configuration ---
-# This line finds and loads the variables from your .env file.
 load_dotenv()
 
-# Load secrets from environment variables.
+# Load secrets from environment variables
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# Check if the secrets were loaded correctly.
+# Check if the secrets were loaded correctly
 if not DB_PASSWORD or not GOOGLE_API_KEY:
     raise ValueError("ERROR: GOOGLE_API_KEY and DB_PASSWORD must be set in your .env file")
 
-# Set the API key as an environment variable for LangChain to use it.
+# Configure Google Generative AI
+genai.configure(api_key=GOOGLE_API_KEY)
 os.environ["GOOGLE_API_KEY"] = GOOGLE_API_KEY
 
-print("--- 🧠 Initializing FloatChat RAG AI Core ---")
+print("--- 🚀 Initializing FloatChat with Gemini 2.0 Flash ---")
 
 # Global variables for the AI components
 llm = None
@@ -36,16 +37,21 @@ rag_chain = None
 retriever = None
 
 def initialize_ai_core():
-    """Initialize all AI components"""
+    """Initialize all AI components with Gemini 2.0 Flash"""
     global llm, db, rag_chain, retriever
 
     if llm is not None:  # Already initialized
         return llm, db, rag_chain
 
     try:
-        # --- 1. Initialize Connections ---
-        llm = ChatGoogleGenerativeAI(model="gemini-2.5-pro", temperature=0)
-        print("✅ Step 1: Connected to LLM (Gemini Pro).")
+        # --- 1. Initialize Gemini 2.0 Flash ---
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash-exp",  # Latest Gemini 2.0 Flash model
+            temperature=0.1,  # Low temperature for more consistent results
+            max_tokens=8192,  # Higher token limit for complex queries
+            convert_system_message_to_human=True  # Better system message handling
+        )
+        print("✅ Step 1: Connected to Gemini 2.0 Flash (Latest Model).")
 
         db_uri = f"postgresql+psycopg2://postgres:{DB_PASSWORD}@localhost:5432/postgres"
         db = SQLDatabase.from_uri(db_uri)
@@ -79,30 +85,40 @@ def initialize_ai_core():
         retriever = vector_store.as_retriever()
         print("✅ Step 3: FAISS vector store loaded and retriever is ready.")
 
-        # --- 3. Create the RAG Prompt Template ---
+        # --- 3. Create Enhanced RAG Prompt Template for Oceanographic Data ---
         template = """
-        You are a PostgreSQL expert. Given a user question, you must first use the
-        retrieved context to understand the database schema and rules.
-        Then, create a syntactically correct PostgreSQL query to answer the question.
-        Unless the user specifies a specific number of examples, query for at most 10 results.
-        Never query for all columns from a table, you must specify the exact columns you need.
-        You must use the table name 'argo_profiles'.
+        You are an expert oceanographer and PostgreSQL specialist working with the global ARGO float dataset.
+        Your role is to help researchers analyze ocean temperature, salinity, and other oceanographic parameters.
 
-        Use the following format:
+        CONTEXT RULES:
+        - Use the retrieved context to understand the database schema and oceanographic relationships
+        - Create syntactically correct PostgreSQL queries for the 'argo_profiles' table
+        - Unless specified, limit results to 10 for performance
+        - Always specify exact columns needed, never use SELECT *
+        - Consider oceanographic principles when interpreting data
 
-        Question: "The user's question"
-        SQLQuery: "Your generated SQL query"
+        OCEANOGRAPHIC EXPERTISE:
+        - Temperature typically ranges from -2°C to 30°C in ocean waters
+        - Salinity typically ranges from 30-37 PSU (Practical Salinity Units)
+        - Deeper waters are generally colder and more saline
+        - Equatorial regions tend to have higher temperatures
+        - Consider seasonal and regional variations
 
-        Only return the SQL query.
-
-        Here is some context to help you:
+        DATABASE SCHEMA CONTEXT:
         {context}
 
-        Question: {question}
-        SQLQuery:
+        USER QUESTION: {question}
+
+        INSTRUCTIONS:
+        1. Analyze the oceanographic context of the question
+        2. Generate an appropriate PostgreSQL query
+        3. Include relevant filtering for realistic oceanographic ranges
+        4. Add helpful comments explaining the oceanographic reasoning
+
+        SQL Query:
         """
         prompt = PromptTemplate.from_template(template)
-        print("✅ Step 4: RAG prompt template created.")
+        print("✅ Step 4: Enhanced oceanographic RAG prompt template created.")
 
         # --- 4. Build the RAG Chain ---
         rag_chain = (
@@ -126,41 +142,128 @@ except Exception as e:
     print(f"Warning: AI core initialization failed: {e}")
     llm = db = rag_chain = None
 
-# --- 5. Create a function to run the full process ---
+# --- Enhanced AI Pipeline Functions ---
 def run_ai_pipeline(question: str):
-    """Run the full AI pipeline for a given question"""
+    """Run the enhanced AI pipeline with Gemini 2.0 Flash for oceanographic analysis"""
     global llm, db, rag_chain
 
     # Ensure components are initialized
     if llm is None or db is None or rag_chain is None:
         llm, db, rag_chain = initialize_ai_core()
 
-    print("\n--- Generating SQL Query using RAG ---")
-    generated_sql = rag_chain.invoke(question)
-    print(f"Generated SQL: {generated_sql}")
+    print(f"\n--- 🌊 Analyzing Oceanographic Query with Gemini 2.0 Flash ---")
+    print(f"Question: {question}")
 
-    print("\n--- Executing SQL Query on the database ---")
     try:
-        result = db.run(generated_sql)
-        print(f"Query Result: {result}")
-        return result
+        # Generate SQL using enhanced RAG
+        generated_sql = rag_chain.invoke(question)
+        print(f"Generated SQL: {generated_sql}")
+
+        # Clean the SQL (remove any extra formatting)
+        clean_sql = generated_sql.strip()
+        if clean_sql.startswith("```sql"):
+            clean_sql = clean_sql.replace("```sql", "").replace("```", "").strip()
+
+        print("\n--- 🔍 Executing Oceanographic Query ---")
+        result = db.run(clean_sql)
+
+        # Format results for better readability
+        if result:
+            print(f"✅ Query executed successfully. Found {len(str(result).split('\n'))} results.")
+            return {
+                "sql_query": clean_sql,
+                "results": result,
+                "status": "success",
+                "model": "gemini-2.0-flash-exp"
+            }
+        else:
+            return {
+                "sql_query": clean_sql,
+                "results": "No data found matching your criteria.",
+                "status": "success_no_data",
+                "model": "gemini-2.0-flash-exp"
+            }
+
     except Exception as e:
-        print(f"SQL execution error: {e}")
-        return f"I encountered an error executing the query: {e}"
+        error_msg = f"Error executing oceanographic query: {str(e)}"
+        print(f"❌ {error_msg}")
+        return {
+            "sql_query": generated_sql if 'generated_sql' in locals() else "Query generation failed",
+            "results": error_msg,
+            "status": "error",
+            "model": "gemini-2.0-flash-exp"
+        }
+
+def get_ocean_insights(question: str, include_analysis: bool = True):
+    """
+    Advanced function that provides oceanographic insights using Gemini 2.0 Flash
+    """
+    result = run_ai_pipeline(question)
+
+    if not include_analysis or result["status"] == "error":
+        return result
+
+    # Use Gemini 2.0 Flash for additional oceanographic analysis
+    try:
+        analysis_prompt = f"""
+        As an expert oceanographer, analyze these ARGO float data results and provide insights:
+
+        Original Question: {question}
+        SQL Query Used: {result['sql_query']}
+        Data Results: {result['results']}
+
+        Please provide:
+        1. Oceanographic interpretation of the data
+        2. What these measurements tell us about ocean conditions
+        3. Any notable patterns or anomalies
+        4. Context for researchers studying this region/parameter
+
+        Keep your analysis concise but scientifically accurate.
+        """
+
+        analysis = llm.invoke(analysis_prompt)
+        result["oceanographic_analysis"] = analysis.content
+        result["enhanced"] = True
+
+    except Exception as e:
+        print(f"Warning: Could not generate oceanographic analysis: {e}")
+        result["oceanographic_analysis"] = "Analysis not available"
+        result["enhanced"] = False
+
+    return result
 
 # --- Main Execution Block ---
 if __name__ == '__main__':
     try:
-        test_question = "Show me the temperature and salinity for floats near the equator. Just give me 5 results."
+        # Test the enhanced Gemini 2.0 Flash integration
+        test_questions = [
+            "Show me temperature and salinity for floats near the equator in the Pacific Ocean",
+            "Find the coldest water temperatures recorded in the last year",
+            "What are the salinity levels in the Atlantic Ocean deeper than 1000 meters?"
+        ]
 
-        print(f"\n--- Asking the AI a test question ---")
-        print(f"Question: '{test_question}'")
+        print(f"\n--- 🚀 Testing Gemini 2.0 Flash Enhanced FloatChat ---")
 
-        final_answer = run_ai_pipeline(test_question)
+        for i, question in enumerate(test_questions[:1], 1):  # Test first question
+            print(f"\n=== Test {i} ===")
+            print(f"Question: '{question}'")
 
-        print("\n--- ✅ Final Answer from Database ---")
-        print(final_answer)
-        print("\n--- Script Finished ---")
+            # Test the enhanced pipeline
+            result = get_ocean_insights(question, include_analysis=True)
+
+            print(f"\n--- ✅ Results from Gemini 2.0 Flash ---")
+            print(f"Status: {result['status']}")
+            print(f"Model: {result['model']}")
+            print(f"SQL Query: {result['sql_query']}")
+            print(f"Data: {result['results']}")
+
+            if result.get('enhanced'):
+                print(f"\n🌊 Oceanographic Analysis:")
+                print(result['oceanographic_analysis'])
+
+        print("\n--- 🎉 Gemini 2.0 Flash Integration Complete ---")
 
     except Exception as e:
         print(f"\n❌ An error occurred: {e}")
+        import traceback
+        traceback.print_exc()

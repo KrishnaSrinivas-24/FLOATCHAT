@@ -5,11 +5,13 @@ netcdf4
 sqlalchemy
 psycopg2-binary
 
-#AI Squad Libraries
+#AI Squad Libraries - Updated for Gemini 2.0 Flash
 langchain
 langchain-community
-langchain-google-genai
+langchain-google-genai>=1.0.10
 sentence-transformers
+google-generativeai>=0.8.0
+faiss-cpu
 
 #Backend API Libraries
 fastapi
